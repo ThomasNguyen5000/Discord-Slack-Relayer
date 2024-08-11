@@ -4,7 +4,7 @@ import asyncio
 from time import sleep
 
 from dotenv import load_dotenv
-from discord_bot import init_bot
+from discord_bot import run_bot
 from pipe import recv_discord_msg, recv_slack_msg
 from slack_bot import run_app
 
@@ -46,9 +46,9 @@ class Runner:
             raise ValueError("No socket token provided")
 
         # Pipe for IPC between main and the Discord bot.
-        self.DISCORD_PIPE, child_discord_pipe = Pipe()
+        self.DISCORD_PIPE, self.CHILD_DISCORD_PIPE = Pipe()
         # I don't think is even needed but just leave it here for now.
-        self.DISCORD_BOT = init_bot(child_discord_pipe)
+        # self.DISCORD_BOT = init_bot(child_discord_pipe)
 
         # Pipe for IPC between main and the Slack bot.
         self.SLACK_PIPE, self.CHILD_SLACK_PIPE = Pipe()
@@ -74,7 +74,7 @@ class Runner:
                 self.DISCORD_PIPE.send(slack_msg)
 
     def run_discord_bot(self) -> None:
-        self.DISCORD_BOT.run(self._DISCORD_TOKEN)
+        run_bot(self._DISCORD_TOKEN, self.CHILD_DISCORD_PIPE)
 
     def run_slack_bot(self) -> None:
         asyncio.run(run_app(

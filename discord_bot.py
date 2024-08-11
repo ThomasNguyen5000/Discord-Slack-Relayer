@@ -3,6 +3,7 @@
 # Dealing with reply and thread.
 from typing import Any, TYPE_CHECKING
 import datetime
+import logging
 
 import discord
 from discord.client import NotFound
@@ -14,6 +15,7 @@ from pipe import RelayedSlackMessage, send_discord_msg, recv_slack_msg
 if TYPE_CHECKING:
     from multiprocessing.connection import Connection
 
+handler = logging.FileHandler(filename="discord.log", encoding="utf-8", mode="w")
 
 # Task that will be executed periodically.
 # Docs: https://discordpy.readthedocs.io/en/latest/ext/tasks/index.html
@@ -142,9 +144,9 @@ class MyClient(discord.Client):
             ).set_author(name=name, icon_url=icon_url)
 
 
-def init_bot(pipe: 'Connection') -> MyClient:
+def run_bot(token: str, pipe: 'Connection') -> None:
     intents = discord.Intents.default()
     intents.message_content = True
     client = MyClient(pipe, intents=intents)
 
-    return client
+    client.run(token=token, log_handler=handler)
